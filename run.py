@@ -1,5 +1,5 @@
 import pygame as pg
-from object import Object
+from object.object import Object
 
 try:
     from OpenGL.GL import *

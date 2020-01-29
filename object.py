@@ -74,7 +74,6 @@ class Object():
             self.append_faces_in_material(1,fa.get_faces_ids())
             self.append_faces(fa.get_structural_faces())
 
-
     def add_multipe_holes_in_face(self,face,size, holsx, holsy, hx, hy):
         verts = self.get_verts_from_face(face)
         radi = ut.get_max_radius_in_vertices(verts)

@@ -1,4 +1,5 @@
 import pygame as pg
+from object import Object
 
 try:
     from OpenGL.GL import *
@@ -16,7 +17,7 @@ except ImportError:
 CUBE_POINTS = (
     (0.5, -0.5, -0.5),
     (0.5, 0.5, -0.5),
-    (-0.5, 0.5, -0.5),
+    (-0.5, 0.5, -1),
     (-0.5, -0.5, -0.5),
     (0.5, -0.5, 0.5),
     (0.5, 0.5, 0.5),

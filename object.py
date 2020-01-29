@@ -54,25 +54,24 @@ class Object():
         self.STRUC_HEIGHT = 2
         self.IDS = 0;
 
-
     def make_object(self):
         self.set_plane_structure();
-        self.set_simple_cercle(72);
-        self.set_structure_extrusion(False);
-
-        self.add_material('gen', (0.749,0.5725,0.392), (1.0,1.0,1), 1.0)
-        self.add_material('Blu', (0,0,1), (0.5,0.5,0), 0.5)
-
-        # self.add_multipe_holes_in_face(self.FACES[3],0.7,1,8,0,0)
-        newFaces = []
-        for face in self.FACES:
-            newFaces.append(self.add_hole_in_face(face,0.9))
-
-        # newFaces.append(self.add_hole_in_face(self.FACES[2],2))
-        for fa in newFaces:
-            self.append_vectors(fa.get_structural_vectors())
-            self.append_faces_in_material(1,fa.get_faces_ids())
-            self.append_faces(fa.get_structural_faces())
+        # self.set_simple_cercle(72);
+        # self.set_structure_extrusion(False);
+        #
+        # self.add_material('gen', (0.749,0.5725,0.392), (1.0,1.0,1), 1.0)
+        # self.add_material('Blu', (0,0,1), (0.5,0.5,0), 0.5)
+        #
+        # # self.add_multipe_holes_in_face(self.FACES[3],0.7,1,8,0,0)
+        # newFaces = []
+        # for face in self.FACES:
+        #     newFaces.append(self.add_hole_in_face(face,0.9))
+        #
+        # # newFaces.append(self.add_hole_in_face(self.FACES[2],2))
+        # for fa in newFaces:
+        #     self.append_vectors(fa.get_structural_vectors())
+        #     self.append_faces_in_material(1,fa.get_faces_ids())
+        #     self.append_faces(fa.get_structural_faces())
 
     def add_multipe_holes_in_face(self,face,size, holsx, holsy, hx, hy):
         verts = self.get_verts_from_face(face)
@@ -434,8 +433,6 @@ class Object():
         # if divider == 90:
         #     self.set_plane_struct_orient(Euler((0, 0, math.radians(45)), 'XYZ'))
 
-
-
     def set_structure_from_image(self):
         ret = ut.import_image("heightmap.jpg")
         self.VERTICES = ret[0]
@@ -454,7 +451,6 @@ class Object():
         self.IDS += 1
         return tip+str(self.IDS)
 
-
     def add_material(self ,name, diffuse, specular, alpha):
         mat = bpy.data.materials.new(name)
         mat.diffuse_color = diffuse
@@ -470,7 +466,6 @@ class Object():
     def append_faces_in_material(self, mat, faces):
         for f in faces:
             self.MATERIALS[mat][1].append(f)
-
 
     def get_materials(self):
         mates = []

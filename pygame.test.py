@@ -9,10 +9,8 @@ except ImportError:
     raise SystemExit
 
 
-# Some simple data for a colored cube here we have the 3D point position and color
-# for each corner. A list of indices describes each face, and a list of
-# indicies describes each edge.
-
+obj = Object()
+obj.make_object()
 
 CUBE_POINTS = (
     (0.5, -0.5, -0.5),
@@ -85,10 +83,7 @@ def drawcube():
 
 
 def init_gl_stuff():
-
     glEnable(GL_DEPTH_TEST)  # use our zbuffer
-
-    # setup the camera
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
     gluPerspective(45.0, 640 / 480.0, 0.1, 100.0)  # setup lens

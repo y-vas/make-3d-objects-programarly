@@ -1,5 +1,5 @@
 import pygame as pg
-from object.object import Object
+from objects.object import Object
 
 try:
     from OpenGL.GL import *
@@ -10,55 +10,7 @@ except ImportError:
 
 
 obj = Object()
-obj.make_object()
-
-CUBE_POINTS = (
-    (0.5, -0.5, -0.5),
-    (0.5, 0.5, -0.5),
-    (-0.5, 0.5, -1),
-    (-0.5, -0.5, -0.5),
-    (0.5, -0.5, 0.5),
-    (0.5, 0.5, 0.5),
-    (-0.5, -0.5, 0.5),
-    (-0.5, 0.5, 0.5),
-)
-
-# colors are 0-1 floating values
-CUBE_COLORS = (
-    (1, 0, 0),
-    (1, 1, 0),
-    (0, 1, 0),
-    (0, 0, 0),
-    (1, 0, 1),
-    (1, 1, 1),
-    (0, 0, 1),
-    (0, 1, 1),
-)
-
-CUBE_QUAD_VERTS = (
-    (0, 1, 2, 3),
-    (3, 2, 7, 6),
-    (6, 7, 5, 4),
-    (4, 5, 1, 0),
-    (1, 5, 7, 2),
-    (4, 0, 3, 6),
-)
-
-CUBE_EDGES = (
-    (0, 1),
-    (0, 3),
-    (0, 4),
-    (2, 1),
-    (2, 3),
-    (2, 7),
-    (6, 3),
-    (6, 4),
-    (6, 7),
-    (5, 1),
-    (5, 4),
-    (5, 7),
-)
-
+CUBE_EDGES,CUBE_POINTS,CUBE_QUAD_VERTS,CUBE_COLORS = obj.example_cube()
 
 def drawcube():
     "draw the cube"
@@ -97,7 +49,7 @@ def main():
     pg.init()
 
     fullscreen = True
-    pg.display.set_mode((640, 480), pg.OPENGL | pg.DOUBLEBUF | pg.FULLSCREEN)
+    pg.display.set_mode((640, 480), pg.OPENGL | pg.DOUBLEBUF )
 
     init_gl_stuff()
 

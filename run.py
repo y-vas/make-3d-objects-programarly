@@ -10,6 +10,12 @@ except ImportError:
 
 
 obj = Object()
+# obj.make_object();
+
+# obj.get_vectors(),
+# obj.get_faces(),
+# obj.get_materials()
+
 CUBE_EDGES,CUBE_POINTS,CUBE_QUAD_VERTS,CUBE_COLORS = obj.example_cube()
 
 def drawcube():

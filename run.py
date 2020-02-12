@@ -44,9 +44,9 @@ def init_gl_stuff():
     glEnable(GL_DEPTH_TEST)  # use our zbuffer
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
-    gluPerspective(45.0, 640 / 480.0, 0.1, 100.0)  # setup lens
-    glTranslatef(0.0, 0.0, -3.0)  # move back
-    glRotatef(25, 1, 0, 0)  # orbit higher
+    gluPerspective(450.0, 640 / 480.0, 0.1, 1000.0)  # setup lens
+    glTranslatef(0.0, 0, -8.0)  # move back
+    # glRotatef(0, 0, 1, 0)  # orbit higher
 
 
 def main():
@@ -73,9 +73,11 @@ def main():
                 if event.key == pg.K_f:
                     if not fullscreen:
                         print("Changing to FULLSCREEN")
+
                         pg.display.set_mode(
                             (640, 480), pg.OPENGL | pg.DOUBLEBUF | pg.FULLSCREEN
                         )
+
                     else:
                         print("Changing to windowed mode")
                         pg.display.set_mode((640, 480), pg.OPENGL | pg.DOUBLEBUF)
@@ -86,7 +88,7 @@ def main():
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
         # orbit camera around by 1 degree
-        glRotatef(1, 0, 1, 0)
+        glRotatef(1, 0, 0, 1)
 
         drawcube()
         pg.display.flip()

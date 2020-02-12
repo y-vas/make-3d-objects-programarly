@@ -7,7 +7,7 @@ class Object():
     def __init__(self, size = 2, name = "build"):
         self.NAME = name;
         self.START_POINTS = 30;
-        self.VERTICES = [];      # [Vector(x,y,z), id ]
+        self.verts = [];      # [Vector(x,y,z), id ]
         self.FACES = [];         # [[id1, id2..] , id ]
         self.MATERIALS = [];     # [mat.., [fid, fid2]]
         self.DELIMITERS = []
@@ -88,9 +88,9 @@ class Object():
         return dict
 
     def make_object(self):
-        self.set_plane_structure();
+        self.plane();
         # self.set_simple_cercle(72);
-        self.set_structure_extrusion(False);
+        # self.set_structure_extrusion(False);
         # self.add_material('gen', (0.749,0.5725,0.392), (1.0,1.0,1), 1.0);
         # self.add_material('blu', (0,0,1), (0.5,0.5,0), 0.5);
         # self.add_multipe_holes_in_face(self.FACES[3],0.7,1,8,0,0)
@@ -129,7 +129,7 @@ class Object():
     def add_hole_in_face(self, face, rad):
         verts = self.get_verts_from_face(face)
         str = Object(rad,self.get_xid("H"));
-        str.set_plane_structure();
+        str.plane();
         # str.set_simple_cercle(90);
 
         newv = ut.get_center_of_polygon(verts)
@@ -199,9 +199,9 @@ class Object():
         center = ut.get_center_of_polygon(verts)
         vec = self.get_vector(0);
 
-        print(self.VERTICES)
+        print(self.verts)
         print("---------")
-        for i, value in enumerate(self.VERTICES):
+        for i, value in enumerate(self.verts):
             angle = ut.angles_of_a_triangle(center, vec ,value[0]);
 
             # print(angle)
@@ -215,13 +215,13 @@ class Object():
             # https://forum.unity.com/threads/how-to-get-a-360-degree-vector3-angle.42145/
             value.append( angle )
 
-        self.VERTICES.sort(key = ut.sort_by_angle)
+        self.verts.sort(key = ut.sort_by_angle)
 
-        for value in self.VERTICES:
+        for value in self.verts:
             value.pop(2)
 
         face = []
-        for x in self.VERTICES:
+        for x in self.verts:
             face.append(x[1])
 
         self.FACES = [[face,self.get_search_id()]]
@@ -229,7 +229,7 @@ class Object():
     def get_verts_from_face(self, face):
         verts = []
         for id in face[0]:
-            for ve in self.VERTICES:
+            for ve in self.verts:
                 if ve[1] == id:
                     verts.append(ve[0])
         return verts
@@ -238,7 +238,7 @@ class Object():
         face = self.FACES[id]
         verts = []
         for id in face[0]:
-            for ve in self.VERTICES:
+            for ve in self.verts:
                 if ve[1] == id:
                     verts.append(ve[0])
         return verts
@@ -246,24 +246,24 @@ class Object():
     def get_verts_and_id_from_face(self, face):
         verts = []
         for id in face:
-            for ve in self.VERTICES:
+            for ve in self.verts:
                 if ve[1] == id:
                     verts.append(ve)
         return verts
 
     def set_plane_struct_pos(self,position):
-        for vert in self.VERTICES:
+        for vert in self.verts:
             vert[0][0] += position[0];
             vert[0][1] += position[1];
             vert[0][2] += position[2];
 
     def set_plane_struct_orient(self,rot):
-        for x in self.VERTICES:
+        for x in self.verts:
             x[0].rotate(rot)
 
     def set_orientation(self,x,y,z):
         rot = Euler((math.radians(x), math.radians(y), math.radians(z)), 'XYZ')
-        for x in self.VERTICES:
+        for x in self.verts:
             x[0].rotate(rot)
 
     def get_center_face(self,verts):
@@ -274,17 +274,17 @@ class Object():
         normal = mathutils.geometry.normal(*verts)
         return normal.to_track_quat('Z','X').to_euler()
 
-    def set_plane_structure(self):
+    def plane(self):
+        self.verts = []
 
-        self.VERTICES = []
-        vects = []; face = []
+        vects, face = [], []
         for vect in range(self.START_POINTS):
             vec = self.rand_vector_out_of_structure_delimiters();
             vects.append([vec,self.get_search_id()]);
 
-        self.VERTICES = vects;
-        self.VERTICES.sort(reverse = True, key = ut.takeSecond)
-        for x in self.VERTICES:
+        self.verts = vects;
+        self.verts.sort(reverse = True, key = ut.takeSecond)
+        for x in self.verts:
             face.append(x[1]);
 
         self.FACES = [[face,self.get_search_id()]];
@@ -305,8 +305,8 @@ class Object():
         verts = [];
         face = [];
 
-        for i,e in enumerate(self.VERTICES):
-            vect = self.VERTICES[i][0]
+        for i,e in enumerate(self.verts):
+            vect = self.verts[i][0]
 
             vct = Vector((
                 vect[0]+ (normalVec[0] * inverse),
@@ -320,10 +320,10 @@ class Object():
         self.FACES.append([face, self.get_search_id()])
 
         for i, vec in enumerate(verts):
-            if i == len(self.VERTICES)-1:
-                face = [self.VERTICES[i][1],verts[i][1],verts[0][1],self.VERTICES[0][1]]
+            if i == len(self.verts)-1:
+                face = [self.verts[i][1],verts[i][1],verts[0][1],self.verts[0][1]]
             else:
-                face = [self.VERTICES[i][1],verts[i][1],verts[i+1][1],self.VERTICES[i+1][1]]
+                face = [self.verts[i][1],verts[i][1],verts[i+1][1],self.verts[i+1][1]]
             self.FACES.append([face, self.get_search_id()])
 
         self.append_vectors(verts)
@@ -361,28 +361,28 @@ class Object():
         return False
 
     def set_structure_min_angles(self):
-        for i in range(len(self.VERTICES)):
+        for i in range(len(self.verts)):
             if i == 0: continue;
             b = i-1; c = i +1;
-            if c == len(self.VERTICES): c = 0;
-            ve1 = self.VERTICES[i][0]
-            ve2 = self.VERTICES[b][0]
-            ve3 = self.VERTICES[c][0]
+            if c == len(self.verts): c = 0;
+            ve1 = self.verts[i][0]
+            ve2 = self.verts[b][0]
+            ve3 = self.verts[c][0]
             if ut.angleTriangleBetwenVectors(ve1,ve2,ve3) < self.NORMALIZED_ANGLES:
                 self.remove_vector_index(i)
                 break
 
     def remove_vector_index(self, indexVector):
-        id = self.VERTICES[indexVector][1]
-        del self.VERTICES[indexVector]
+        id = self.verts[indexVector][1]
+        del self.verts[indexVector]
         for face in self.FACES:
             for i,e in enumerate(face):
                 if e == id:
                     del face[i]
 
     def remove_vector_id(self, id):
-        for n, v in enumerate(self.VERTICES):
-            if v[1] == id: self.VERTICES.remove(n)
+        for n, v in enumerate(self.verts):
+            if v[1] == id: self.verts.remove(n)
 
         for n,face in enumerate(self.FACES):
             for i in face:
@@ -390,25 +390,25 @@ class Object():
 
     def remove_vector(self, vector):
         id = ""
-        for n, v in enumerate(self.VERTICES):
+        for n, v in enumerate(self.verts):
             if v == vector:
-                id = self.VERTICES[n][1]
-                self.VERTICES.remove(n)
+                id = self.verts[n][1]
+                self.verts.remove(n)
 
         for n,face in enumerate(self.FACES):
             for i in face:
                 if i > id: self.FACES[n].remove(id);
 
     def check_angles(self):
-        if len(self.VERTICES) == 5:
+        if len(self.verts) == 5:
             return True
-        for index in range(len(self.VERTICES)):
+        for index in range(len(self.verts)):
             if index != 0:
                 c = 0; b = index-1; c = index +1;
-                if c == len(self.VERTICES): c = 0;
-                ve2 = self.VERTICES[b][0]
-                ve3 = self.VERTICES[c][0]
-                ang = ut.angleTriangleBetwenVectors(self.VERTICES[index][0],ve2,ve3);
+                if c == len(self.verts): c = 0;
+                ve2 = self.verts[b][0]
+                ve3 = self.verts[c][0]
+                ang = ut.angleTriangleBetwenVectors(self.verts[index][0],ve2,ve3);
                 if ang < self.NORMALIZED_ANGLES:
                     return False
         return True
@@ -435,25 +435,25 @@ class Object():
 
     def mhv(self):
         vert = []
-        for x in self.VERTICES:
+        for x in self.verts:
             vert.append( x[0] )
         return vert
 
     def dfv(self):
         vert = []
-        for x in self.VERTICES:
+        for x in self.verts:
             v = x[0]
             vert.append((v.x,v.y,v.z))
         return vert
 
     def dfvc(self):
-        return tuple([ (1,0,0) for x in self.VERTICES ])
+        return tuple([ (1,0,0) for x in self.verts ])
 
     def dfe(self):
         fc = self.dff()
 
         edges = []
-        for x in range(len(self.VERTICES)):
+        for x in range(len(self.verts)):
             for f in fc:
 
                 for i, v in enumerate(f):
@@ -485,7 +485,7 @@ class Object():
         for face in self.FACES:
             aface = []
             for id in face[0]:
-                for i, ve in enumerate(self.VERTICES):
+                for i, ve in enumerate(self.verts):
                     if id == ve[1]:
                         aface.append(i)
             faces.append( tuple(aface) )
@@ -499,20 +499,20 @@ class Object():
 
     def add_vertices(self, vertices):
         for v in vertices:
-            self.VERTICES.append([v,self.get_search_id()])
+            self.verts.append([v,self.get_search_id()])
 
     def get_structural_vectors(self):
-        return self.VERTICES
+        return self.verts
 
     def get_vector(self, index):
-        return self.VERTICES[index][0]
+        return self.verts[index][0]
 
     def get_structural_faces(self):
         return self.FACES
 
     def append_vectors(self,vectors):
         for value in vectors:
-            self.VERTICES.append(value)
+            self.verts.append(value)
 
     def append_faces(self,faces):
         for face in faces:
@@ -529,7 +529,7 @@ class Object():
                 vec = Vector((0, self.SIZE,0))
                 vec.rotate(Euler((0.0, 0, math.radians(radi)), 'XYZ'))
                 id = self.get_search_id();
-                self.VERTICES.append([vec,id])
+                self.verts.append([vec,id])
                 face.append(id)
 
         self.FACES.append([face,self.get_search_id()])
@@ -538,11 +538,11 @@ class Object():
 
     def set_structure_from_image(self):
         ret = ut.import_image("heightmap.jpg")
-        self.VERTICES = ret[0]
+        self.verts = ret[0]
         self.FACES = ret[1]
 
     def clean_structure(self):
-        self.VERTICES = []
+        self.verts = []
         self.FACES = []
         self.EDGES = []
 

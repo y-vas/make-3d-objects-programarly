@@ -4,61 +4,17 @@ import mainutils as ut
 from mathutils import Vector, Euler ,Matrix
 
 class Object():
-    def __init__(self, size = 5, name = "build"):
+    def __init__(self, size = 2, name = "build"):
         self.NAME = name;
-        self.START_POINTS = 20;
+        self.START_POINTS = 30;
         self.VERTICES = [];      # [Vector(x,y,z), id ]
         self.FACES = [];         # [[id1, id2..] , id ]
         self.MATERIALS = [];     # [mat.., [fid, fid2]]
         self.DELIMITERS = []
         self.NORMALIZED_ANGLES = 60
         self.SIZE = size
-        self.STRUC_HEIGHT = 2
+        self.STRUC_HEIGHT = 1
         self.IDS = 0;
-
-    def example_cube(self):
-
-        CUBE_POINTS = (
-            (0.5, -0.5, -0.5),
-            (0.5, 0.5, -0.5 ),
-            (-0.5, 0.5, -1 ),
-            (-0.5, -0.5, -0.5 ),
-            (0.5, -0.5, 0.5 ),
-            (0.5, 0.5, 0.5 ),
-            (-0.5, -0.5, 0.5 ),
-            (-0.5, 0.5, 0.5 ),
-        )
-
-        # colors are 0-1 floating values
-        CUBE_COLORS = (
-            (1, 0, 0),
-            (1, 1, 0),
-            (0, 1, 0),
-            (0, 0, 0),
-            (1, 0, 1),
-            (1, 1, 1),
-            (0, 0, 1),
-            (0, 1, 1),
-        )
-
-        CUBE_QUAD_VERTS = (
-            (0, 1, 2, 3),
-            (3, 2, 7, 6),
-            (6, 7, 5, 4),
-            (4, 5, 1, 0),
-            (1, 5, 7, 2),
-            (4, 0, 3, 6),
-        )
-
-        CUBE_EDGES = (
-            (0, 1), (0, 3), (0, 4),
-            (2, 1), (2, 3),
-            (2, 7), (6, 3),
-            (6, 4), (6, 7), (5, 1),
-            (5, 4), (5, 7),
-        )
-
-        return CUBE_EDGES,CUBE_POINTS,CUBE_QUAD_VERTS,CUBE_COLORS
 
 
     def save_structure(self):
@@ -131,15 +87,6 @@ class Object():
 
         return dict
 
-    def make_test_object(self):
-        self.START_POINTS = 5;
-
-
-    def make_terrain(self):
-        # self.set_random_delimiters(size,cuant, area);
-        # whatssch perlin noise
-        pass
-
     def make_object(self):
         self.set_plane_structure();
         # self.set_simple_cercle(72);
@@ -155,7 +102,7 @@ class Object():
         # # newFaces.append(self.add_hole_in_face(self.FACES[2],2))
         # for fa in newFaces:
         #     self.append_vectors(fa.get_structural_vectors())
-        #     self.append_faces_in_material(1,fa.get_faces_ids())
+        #     self.append_faces_in_material(1,fa.mhf_ids())
         #     self.append_faces(fa.get_structural_faces())
 
     def add_multipe_holes_in_face(self,face,size, holsx, holsy, hx, hy):
@@ -175,7 +122,7 @@ class Object():
                 str.delimite_structure_in_face(verts)
                 str.set_plane_struct_pos(newv);
                 self.append_vectors(str.get_structural_vectors())
-                self.append_faces_in_material(1,str.get_faces_ids())
+                self.append_faces_in_material(1,str.mhf_ids())
                 self.append_faces(str.get_structural_faces())
 
 
@@ -229,7 +176,7 @@ class Object():
 
 
     def delimite_structure_in_face(self, v_delim):
-        verts = self.get_vectors()
+        verts = self.mhv()
 
         # radi_d = ut.get_max_radius_in_vertices(v_delim)
         # radi_s = ut.get_max_radius_in_vertices(verts)
@@ -486,13 +433,54 @@ class Object():
         struct = [vectors,edges,faces,self.NAME+"_Delimiters"]
         return struct
 
-    def get_vectors(self):
+    def mhv(self):
         vert = []
         for x in self.VERTICES:
-            vert.append(x[0])
+            vert.append( x[0] )
         return vert
 
-    def get_faces(self):
+    def dfv(self):
+        vert = []
+        for x in self.VERTICES:
+            v = x[0]
+            vert.append((v.x,v.y,v.z))
+        return vert
+
+    def dfvc(self):
+        return tuple([ (1,0,0) for x in self.VERTICES ])
+
+    def dfe(self):
+        fc = self.dff()
+
+        edges = []
+        for x in range(len(self.VERTICES)):
+            for f in fc:
+
+                for i, v in enumerate(f):
+                    if v == x:
+                        mm = list(f+f+f)
+                        del mm[i]
+
+                        l = mm.index(v)
+
+                        e1 = (mm[l],mm[l+1])
+                        e2 = (mm[l-1],mm[l])
+
+                        edges.append(e1)
+                        edges.append(e2)
+
+
+        nedges = []
+
+        for x,y in edges:
+            l ,lf= (x,y) , (y,x)
+            if l not in nedges and lf not in edges: nedges.append(l)
+
+        edges = list(set(nedges))
+
+        return edges
+
+    def dff(self):
         faces = []
         for face in self.FACES:
             aface = []
@@ -500,10 +488,10 @@ class Object():
                 for i, ve in enumerate(self.VERTICES):
                     if id == ve[1]:
                         aface.append(i)
-            faces.append(aface)
-        return faces
+            faces.append( tuple(aface) )
+        return tuple(faces)
 
-    def get_faces_ids(self):
+    def mhf_ids(self):
         faces = []
         for face in self.FACES:
             faces.append(face[1])

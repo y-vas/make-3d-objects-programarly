@@ -9,14 +9,18 @@ except ImportError:
     raise SystemExit
 
 
-obj = Object()
-obj.make_object()
+obj = Object(
+    size = 5,
+    points= 50
+)
+
+obj.mkobj( strech = 3 )
+
 CUBE_POINTS = obj.dfv()
 CUBE_COLORS = obj.dfvc()
-CUBE_QUAD_VERTS = obj.dff()
+CUBE_QUAD_VERTS = ()
 CUBE_EDGES = obj.dfe()
 
-# CUBE_EDGES,CUBE_POINTS,CUBE_QUAD_VERTS,CUBE_COLORS = obj.example_cube()
 
 def drawcube():
     "draw the cube"
@@ -31,6 +35,7 @@ def drawcube():
     glEnd()
 
     glColor3f(1.0, 1.0, 1.0)
+
     glBegin(GL_LINES)
     for line in CUBE_EDGES:
         for vert in line:
@@ -45,8 +50,8 @@ def init_gl_stuff():
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
     gluPerspective(450.0, 640 / 480.0, 0.1, 1000.0)  # setup lens
-    glTranslatef(0.0, 0, -8.0)  # move back
-    # glRotatef(0, 0, 1, 0)  # orbit higher
+    glTranslatef(0.0, 0, -40.0)  # move back
+    glRotatef(0, 0, 1, 0)  # orbit higher
 
 
 def main():

@@ -1,21 +1,71 @@
 import mathutils ,random ,math ,os
-from random import randint
+from random import randint as rint
 import mainutils as ut
-from mathutils import Vector, Euler ,Matrix
+from mathutils import Euler ,Matrix
+from mathutils import Vector as vtr
+from mathutils.geometry import intersect_line_line as ill
 
 class Object():
-    def __init__(self, size = 2, name = "build"):
+    def __init__(self, size = 5,points=30, name = "build"):
         self.NAME = name;
-        self.START_POINTS = 30;
-        self.verts = [];      # [Vector(x,y,z), id ]
+        self.points = points;
+        self.verts = [];         # [vtr(x,y,z), id ]
         self.FACES = [];         # [[id1, id2..] , id ]
         self.MATERIALS = [];     # [mat.., [fid, fid2]]
-        self.DELIMITERS = []
+        self.delimiters = []     # [vtr(xyz),dist ]
         self.NORMALIZED_ANGLES = 60
-        self.SIZE = size
+        self.size = size
         self.STRUC_HEIGHT = 1
         self.IDS = 0;
 
+    def plane(self,strech=None,type=1):
+        self.verts = []
+        if strech != None: self.delimiters = [ [ vtr((0,0,0)),strech ] ]
+        vects, face = [], []
+
+        if type == 1:
+            half = int(self.points / 2)
+            v1 = self.rvec(z=0,zd=False,delimited=False);
+            vects.append([v1,self.sid()])
+
+            for vect in range( half - 1 ):
+                vn = self.rvec(z=0,zd=False,delimited=False)
+                vec = vn + vects[-1][0]
+
+                while True:
+
+                    bad = False
+                    for i,vk in enumerate(vects):
+                        if i == 0: continue
+                        if ill(vk[0],vects[i-1][0],vects[-1][0],vec):
+                            bad = True
+                            break
+
+                    if not bad: break
+                    vn = self.rvec(z=0,zd=False,delimited=False)
+                    vec = vn + vects[-1][0]
+
+
+
+                vects.append([vec,self.sid()])
+                pass
+
+            self.verts = vects;
+        else:
+            for vect in range( self.points ):
+                vec = self.rvec(z=0,zd=False);
+                vects.append([vec,self.sid()]);
+
+            self.verts = vects;
+            self.verts.sort(reverse = True, key = ut.takeSecond)
+
+        for x in self.verts:
+            face.append(x[1]);
+
+        self.FACES = [[face,self.sid()]];
+
+        # while self.check_angles() == False:
+        #     self.set_structure_min_angles();
 
     def save_structure(self):
         name = self.NAME;
@@ -66,7 +116,7 @@ class Object():
                 v = ut.sql_query("SELECT x,y,z FROM vertices WHERE id = "+vert)[0]
 
                 vert_pos = len(stored_verts);
-                v = Vector( (v[0],v[1],v[2]) );
+                v = vtr( (v[0],v[1],v[2]) );
 
                 if v in stored_verts:
                     vert_pos = stored_verts.index(v)
@@ -87,8 +137,8 @@ class Object():
 
         return dict
 
-    def make_object(self):
-        self.plane();
+    def mkobj(self,strech=1):
+        self.plane(strech = strech);
         # self.set_simple_cercle(72);
         # self.set_structure_extrusion(False);
         # self.add_material('gen', (0.749,0.5725,0.392), (1.0,1.0,1), 1.0);
@@ -116,7 +166,7 @@ class Object():
                 str = Object(size/1.5,self.get_xid("H"));
                 str.set_simple_cercle(90);
                 str.set_plane_struct_orient(Euler((0, 0, math.radians(45)), 'XYZ'))
-                # vc = Vector((-((holsx*size)/2)+x*size+size/2+hx,-((holsy*size)/2)+y*size+size/2,0+hy))
+                # vc = vtr((-((holsx*size)/2)+x*size+size/2+hx,-((holsy*size)/2)+y*size+size/2,0+hy))
                 # str.set_plane_struct_pos(vc);
                 str.set_plane_struct_orient(quat_diff)
                 str.delimite_structure_in_face(verts)
@@ -207,9 +257,9 @@ class Object():
             # print(angle)
             # print(value)
             #
-            # v = Vector((value[0][0],value[0][1],value[0][2]))
+            # v = vtr((value[0][0],value[0][1],value[0][2]))
             # eul = v.to_track_quat('-Z','Y').to_euler()
-            # v2 = Vector((eul[0],eul[1],eul[2]))
+            # v2 = vtr((eul[0],eul[1],eul[2]))
             # value[0] = v2
 
             # https://forum.unity.com/threads/how-to-get-a-360-degree-vector3-angle.42145/
@@ -224,7 +274,7 @@ class Object():
         for x in self.verts:
             face.append(x[1])
 
-        self.FACES = [[face,self.get_search_id()]]
+        self.FACES = [[face,self.sid()]]
 
     def get_verts_from_face(self, face):
         verts = []
@@ -274,23 +324,6 @@ class Object():
         normal = mathutils.geometry.normal(*verts)
         return normal.to_track_quat('Z','X').to_euler()
 
-    def plane(self):
-        self.verts = []
-
-        vects, face = [], []
-        for vect in range(self.START_POINTS):
-            vec = self.rand_vector_out_of_structure_delimiters();
-            vects.append([vec,self.get_search_id()]);
-
-        self.verts = vects;
-        self.verts.sort(reverse = True, key = ut.takeSecond)
-        for x in self.verts:
-            face.append(x[1]);
-
-        self.FACES = [[face,self.get_search_id()]];
-
-        while self.check_angles() == False:
-            self.set_structure_min_angles();
 
     def set_structure_extrusion(self, normal = False):
         vertes = self.get_verts_from_face_id(0)
@@ -308,55 +341,58 @@ class Object():
         for i,e in enumerate(self.verts):
             vect = self.verts[i][0]
 
-            vct = Vector((
+            vct = vtr((
                 vect[0]+ (normalVec[0] * inverse),
                 vect[1]+(normalVec[1]*inverse),
                 vect[2]+(normalVec[2]*inverse))
                     )
-            idv = self.get_search_id();
+            idv = self.sid();
             verts.append([vct,idv])
             face.append(idv)
 
-        self.FACES.append([face, self.get_search_id()])
+        self.FACES.append([face, self.sid()])
 
         for i, vec in enumerate(verts):
             if i == len(self.verts)-1:
                 face = [self.verts[i][1],verts[i][1],verts[0][1],self.verts[0][1]]
             else:
                 face = [self.verts[i][1],verts[i][1],verts[i+1][1],self.verts[i+1][1]]
-            self.FACES.append([face, self.get_search_id()])
+            self.FACES.append([face, self.sid()])
 
         self.append_vectors(verts)
 
     def set_random_delimiters(self,size,cuant, area):
         spaces = [];
         for p in range(cuant):
-            radius = randint(0,area*100)/100
+            radius = rint(0,area*100)/100
             spaces.append( [ ut.randVect3D(size,size,0),radius ] )
 
-        self.DELIMITERS = spaces
+        self.delimiters = spaces
 
-    def rand_vector_out_of_structure_delimiters(self):
-        badVert = True; trys = 0
-        while badVert == True:
-            vec = ut.randVect3D(self.SIZE,self.SIZE,0);
-            trys += 1
-            if trys > 100: return vec
-            if badVert == self.is_vector_in_delimiters(vec):
+    def rvec(self,x=1,y=1,z=1,xd=True,yd=True,zd=True,delimited=True,persistance=100):
+        vec = None
+        min = self.size
+        for vects in range(persistance):
+            vx = rint(-x * 100 * min ,y * 100 * min )/100
+            vy = rint(-x * 100 * min ,y * 100 * min )/100
+            vz = rint(-z * 100 * min ,z * 100 * min )/100
+            vec= vtr(( vx, vy, vz ))
+
+            if not delimited: return vec
+            if not self.vdelimited(vec,xd,yd,zd):
                 return vec
 
-    def rand_vector_out_of_structure_delimiters3D(self):
-        badVert = True; trys = 0
-        while badVert == True:
-            vec = ut.randVect3D(self.SIZE,self.SIZE,self.SIZE);
-            trys += 1
-            if trys > 100: return vec
-            if badVert == self.is_vector_in_delimiters(vec):
-                return vec
+        return vec
 
-    def is_vector_in_delimiters(self, vector):
-        for d in self.DELIMITERS:
-            if ut.distanceBetwenVectors(d[0],vector) < d[1]:
+    def vdelimited(self,V,x=True,y=True,z=True,delimiter=[]):
+        delimiters = self.delimiters if delimiter != [] else delimiter
+        for d in delimiters:
+            A = d[0]
+            lx = 0 if not x else (V[0]-A[0])**2
+            ly = 0 if not x else (V[1]-A[1])**2
+            lz = 0 if not x else (V[2]-A[2])**2
+            dist = math.sqrt(lx+ly+lz)
+            if dist <= d[1]:
                 return True;
         return False
 
@@ -372,9 +408,9 @@ class Object():
                 self.remove_vector_index(i)
                 break
 
-    def remove_vector_index(self, indexVector):
-        id = self.verts[indexVector][1]
-        del self.verts[indexVector]
+    def remove_vector_index(self, indexvtr):
+        id = self.verts[indexvtr][1]
+        del self.verts[indexvtr]
         for face in self.FACES:
             for i,e in enumerate(face):
                 if e == id:
@@ -416,16 +452,16 @@ class Object():
     def get_delimiters_as_areas(self):
         vectors = []; faces = []; edges = []
         verts = 0
-        for space in self.DELIMITERS:
+        for space in self.delimiters:
             delimiter_vector = space[0]
             radius = space[1]
             face = []; radi = 0;
             while radi < 360:
                 radi += 1
                 if radi % 24 == 0:
-                    vec = Vector((0, radius,0))
+                    vec = vtr((0, radius,0))
                     vec.rotate(Euler((0.0, 0, math.radians(radi)), 'XYZ'))
-                    vecF = Vector((vec[0]+delimiter_vector[0], vec[1]+delimiter_vector[1], vec[2]+delimiter_vector[2]))
+                    vecF = vtr((vec[0]+delimiter_vector[0], vec[1]+delimiter_vector[1], vec[2]+delimiter_vector[2]))
                     vectors.append(vecF)
                     face.append(verts)
                     verts += 1
@@ -499,7 +535,7 @@ class Object():
 
     def add_vertices(self, vertices):
         for v in vertices:
-            self.verts.append([v,self.get_search_id()])
+            self.verts.append([v,self.sid()])
 
     def get_structural_vectors(self):
         return self.verts
@@ -526,13 +562,13 @@ class Object():
         while radi > 0:
             radi -= 1
             if radi % divider == 0:
-                vec = Vector((0, self.SIZE,0))
+                vec = vtr((0, self.size,0))
                 vec.rotate(Euler((0.0, 0, math.radians(radi)), 'XYZ'))
-                id = self.get_search_id();
+                id = self.sid();
                 self.verts.append([vec,id])
                 face.append(id)
 
-        self.FACES.append([face,self.get_search_id()])
+        self.FACES.append([face,self.sid()])
         # if divider == 90:
         #     self.set_plane_struct_orient(Euler((0, 0, math.radians(45)), 'XYZ'))
 
@@ -546,7 +582,7 @@ class Object():
         self.FACES = []
         self.EDGES = []
 
-    def get_search_id(self):
+    def sid(self):
         self.IDS += 1
         return self.NAME+"_ID"+str(self.IDS)
 
